@@ -1,31 +1,86 @@
+const jwt = require("jsonwebtoken");
 const blogListRouter = require("express").Router();
 const Blog = require("../models/blog");
+const User = require("../models/user");
 
-blogListRouter.get('/', (request, response, next) => {
-  Blog
-    .find({})
-    .then(blogs => {
-      response.json(blogs);
-    })
-    .catch(error => next(error));
+
+blogListRouter.get('/', async (request, response, next) => {
+  try {
+    const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 });
+    response.json(blogs);
+  } catch (error) {
+    next(error);
+  }
 });
 
-blogListRouter.post('/', (request, response, next) => {
-  const body = request.body;
 
-  const blog = new Blog({
+
+blogListRouter.post('/', async (request, response, next) => {
+  try {
+    const body = request.body;
+    const extractedUser = request.user;
+
+    const user = await User.findById(extractedUser.id);
+
+
+    const blog = new Blog({
+      title: body.title,
+      author: body.author,
+      url: body.url,
+      user: user.id,
+      likes: body.likes || 0
+    });
+
+    const savedBlog = await blog.save();
+    user.blogs = user.blogs.concat(savedBlog.id);
+    await user.save();
+
+    response.status(201).json(savedBlog);
+  } catch (error) {
+    next(error);
+  }
+
+});
+
+blogListRouter.put("/:id", async (request, response, next) => {
+  const body = request.body;
+  const id = request.params.id;
+
+  const updatedBlog = {
     title: body.title,
     author: body.author,
     url: body.url,
     likes: body.likes
-  });
+  };
 
-  blog
-    .save()
-    .then(result => {
-      response.status(201).json(result);
-    })
-    .catch(error => next(error));
+  try {
+    const blogToUpdate = await Blog.findByIdAndUpdate(id, updatedBlog, { new: true, runValidators: true, context: "query" });
+    response.status(201).json(blogToUpdate);
+  } catch (error) {
+    next(error);
+  }
+});
+
+blogListRouter.delete("/:id", async (request, response, next) => {
+  const id = request.params.id;
+  const user = request.user;
+  try {
+    const blogToDelete = await Blog.findById(id).populate("user");
+
+    if (!blogToDelete) {
+      return response.status(404).json({ error: "Blog not found" });
+    }
+
+
+    if (blogToDelete.user.id !== user.id) {
+      return response.status(403).json({ error: "Not authorized to delete this blog" });
+    }
+
+    await Blog.findByIdAndDelete(id);
+    response.status(200).json({ message: "NOTE DELETED" });
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = blogListRouter;
