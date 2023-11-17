@@ -3,7 +3,7 @@ const supertest = require("supertest");
 const app = require("../app");
 const api = supertest(app);
 const Blog = require("../models/blog");
-const { getToken } = require('./helper');
+const { getToken, usersInDb } = require('./helper');
 
 
 const initialBlogs = [
@@ -11,9 +11,16 @@ const initialBlogs = [
     title: "body.title",
     author: "body.author",
     url: "body.url",
+    user: "65566f0d73346ce23ecccdbc",
     likes: 10
   }
 ];
+
+let token;
+
+beforeAll(async () => {
+  token = await getToken();
+});
 
 
 beforeEach(async () => {
@@ -26,10 +33,11 @@ beforeEach(async () => {
 });
 
 describe("GET api/blogs", () => {
-
   test("all blogs are returned as json", async () => {
+
     const response = await api
       .get("/api/blogs")
+      .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect('Content-Type', /application\/json/);
 
@@ -37,24 +45,21 @@ describe("GET api/blogs", () => {
   });
 
   test("that the unique identifier property of the blog posts is named id", async () => {
-    const response = await api.get("/api/blogs");
+    const response = await api.get("/api/blogs").set('Authorization', `Bearer ${token}`);
     const blogsId = response.body.map(r => r.id);
     expect(blogsId).toBeDefined();
   });
 });
 
 describe("POST api/blogs", () => {
-  let token;
-
-  beforeAll(async () => {
-    token = await getToken();
-  });
-
   test("that blog can be added", async () => {
+    const users = await usersInDb();
+    const userId = users[0].id;
     const newBlog = {
       title: "body.title-NEW",
       author: "body.author-NEW",
       url: "body.url-NEW",
+      user: userId,
       likes: 20
     };
 
@@ -78,6 +83,7 @@ describe("POST api/blogs", () => {
 
     const response = await api
       .post("/api/blogs")
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/);
@@ -93,6 +99,7 @@ describe("POST api/blogs", () => {
 
     const response = await api
       .post("/api/blogs")
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(400);
 
@@ -104,6 +111,20 @@ describe("POST api/blogs", () => {
     for (const error of expectedErrors) {
       expect(response.body.error).toContain(error);
     }
+  });
+
+  test("fails with status code 401 Unauthorized if no token is provided", async () => {
+    const newBlog = {
+      title: "Sample Title",
+      author: "Sample Author",
+      url: "https://sampleurl.com",
+      likes: 10
+    };
+
+    await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .expect(401);
   });
 
 });
@@ -120,6 +141,7 @@ describe("PUT api/blogs", () => {
 
     await api
       .put(`/api/blogs/${blogToUpdate.id}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(updatedBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/);
@@ -135,23 +157,21 @@ describe("PUT api/blogs", () => {
 });
 
 describe("DELETE api/blogs", () => {
-
-  test("succeeds with status code 204 if id is valid", async () => {
+  test("succeeds with status code 200 if id is valid and user can delete the blog", async () => {
     const blogsAtStart = await Blog.find({});
     const blogToDelete = blogsAtStart[0];
 
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     const blogsAtEnd = await Blog.find({});
-    expect(blogsAtEnd).toHaveLength(initialBlogs.length - 1);
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length - 1);
 
     const contents = blogsAtEnd.map(r => r.title);
-
     expect(contents).not.toContain(blogToDelete.title);
   });
-
 });
 
 
