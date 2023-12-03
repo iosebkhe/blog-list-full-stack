@@ -1,4 +1,5 @@
 const blogListRouter = require("express").Router();
+const middleware = require("../utils/middleware");
 const Blog = require("../models/blog");
 const User = require("../models/user");
 
@@ -12,7 +13,7 @@ blogListRouter.get('/', async (request, response, next) => {
   }
 });
 
-blogListRouter.post('/', async (request, response, next) => {
+blogListRouter.post('/', middleware.userExtractor, async (request, response, next) => {
   try {
     const body = request.body;
     const extractedUser = request.user;
@@ -39,7 +40,7 @@ blogListRouter.post('/', async (request, response, next) => {
 
 });
 
-blogListRouter.put("/:id", async (request, response, next) => {
+blogListRouter.put("/:id", middleware.userExtractor, async (request, response, next) => {
   const body = request.body;
   const id = request.params.id;
 
@@ -58,7 +59,7 @@ blogListRouter.put("/:id", async (request, response, next) => {
   }
 });
 
-blogListRouter.delete("/:id", async (request, response, next) => {
+blogListRouter.delete("/:id", middleware.userExtractor, async (request, response, next) => {
   const id = request.params.id;
   const extractedUser = request.user;
   try {
@@ -70,11 +71,11 @@ blogListRouter.delete("/:id", async (request, response, next) => {
 
 
     if (blogToDelete.user.id !== extractedUser.id) {
-      return response.status(403).json({ error: "Not authorized to delete this blog" });
+      return response.status(403).json({ error: "NOT authorized to delete this blog" });
     }
 
     await Blog.findByIdAndDelete(id);
-    response.status(200).json({ message: "NOTE DELETED" });
+    response.status(200).json({ message: "BLOG DELETED" });
   } catch (error) {
     next(error);
   }

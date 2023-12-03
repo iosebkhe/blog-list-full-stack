@@ -37,7 +37,6 @@ describe("GET api/blogs", () => {
 
     const response = await api
       .get("/api/blogs")
-      .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect('Content-Type', /application\/json/);
 

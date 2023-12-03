@@ -4,7 +4,6 @@ const morgan = require("morgan");
 
 const morganLogger = morgan("tiny");
 const requestLogger = (request, response, next) => {
-  // Use Morgan to log the incoming request
   morganLogger(request, response, () => {
     next();
   });
