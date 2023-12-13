@@ -13,4 +13,4 @@ testingRouter.post("/reset", async (request, response, next) => {
   }
 });
 
-module.exports = { testingRouter };
+module.exports = testingRouter;
