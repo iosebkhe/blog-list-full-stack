@@ -16,13 +16,24 @@ Ready to see BlogList in action? Visit our live website: [BlogList Live](https:/
 
 ### Inspired by:
 
-This mini-blog was built as a hands-on project during the popular "Full Stack Open" course: [Link](https://fullstackopen.com/en/ ){:target="_blank"} Through this course, I explored modern full-stack development concepts and implemented them in this project, including functionalities like user authentication, blog management, and data persistence using React, Node.js, Express, and MongoDB.
+This mini-blog was built as a hands-on project during the popular "Full Stack Open" course: [Link](https://fullstackopen.com/en/ ) Through this course, I explored modern full-stack development concepts and implemented them in this project, including functionalities like user authentication, blog management, and data persistence using React, Node.js, Express, and MongoDB.
 
 ### Getting Started:
 
-1. Clone the repository: `git clone https://github.com/iosebkhe/blog-list-node-js.git`
-2. Install dependencies: `npm install`
-3. Run the application: `npm start`
+1. Clone the repository: 
+```sh
+git clone https://github.com/iosebkhe/blog-list-node-js.git
+```
+
+2. Install dependencies: 
+```sh
+npm install
+```
+
+3. Run the application: 
+```sh
+npm start
+```
 
 ### Technologies Used:
 
@@ -39,4 +50,3 @@ This mini-blog was built as a hands-on project during the popular "Full Stack Op
 **Let's build something awesome together!**
 
 **P.S.** Remember, the pre-defined login credentials are for demo purposes only. For production use, please implement secure authentication methods.
-
